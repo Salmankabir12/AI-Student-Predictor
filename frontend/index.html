@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Student Predictor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #e2e8f0;
+      padding: 20px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      background: linear-gradient(135deg, #818cf8, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-bottom: 28px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #cbd5e1;
+    }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-size: 15px;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: #6366f1;
+    }
+    .input-hint {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    button:hover { opacity: 0.9; }
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .result {
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 12px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      display: none;
+    }
+    .result.show { display: block; }
+    .result-label { font-size: 13px; color: #94a3b8; margin-bottom: 4px; }
+    .result-value {
+      font-size: 36px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #818cf8, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .result-note { font-size: 13px; color: #64748b; margin-top: 8px; }
+
+    .error {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
+      font-size: 14px;
+      display: none;
+    }
+    .error.show { display: block; }
+
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin: 0 auto;
+    }
+    .spinner.show { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>AI Student Predictor</h1>
+    <p class="subtitle">Predict final exam marks based on study habits</p>
+
+    <form id="predict-form">
+      <div class="form-group">
+        <label for="hours">Hours Studied (per week)</label>
+        <input type="number" id="hours" name="hours" min="0" max="24" step="0.5" value="5" required>
+        <div class="input-hint">Range: 0 – 24 hours</div>
+      </div>
+
+      <div class="form-group">
+        <label for="attendance">Attendance (%)</label>
+        <input type="number" id="attendance" name="attendance" min="0" max="100" step="1" value="75" required>
+        <div class="input-hint">Range: 0 – 100%</div>
+      </div>
+
+      <div class="form-group">
+        <label for="previous_marks">Previous Exam Marks</label>
+        <input type="number" id="previous_marks" name="previous_marks" min="0" max="100" step="0.5" value="65" required>
+        <div class="input-hint">Range: 0 – 100</div>
+      </div>
+
+      <button type="submit" id="predict-btn">
+        <span id="btn-text">Predict Marks</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+    </form>
+
+    <div class="result" id="result">
+      <div class="result-label">Predicted Final Marks</div>
+      <div class="result-value" id="predicted-marks">—</div>
+      <div class="result-note">Based on the linear regression model trained on student performance data.</div>
+    </div>
+
+    <div class="error" id="error"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('predict-form');
+    const result = document.getElementById('result');
+    const error = document.getElementById('error');
+    const predictedMarks = document.getElementById('predicted-marks');
+    const btnText = document.getElementById('btn-text');
+    const spinner = document.getElementById('spinner');
+    const btn = document.getElementById('predict-btn');
+    // Get API URL from the same origin (served via FastAPI mount) or config
+    const API_URL = '/predict';
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      result.classList.remove('show');
+      error.classList.remove('show');
+      btn.disabled = true;
+      btnText.style.display = 'none';
+      spinner.classList.add('show');
+
+      const payload = {
+        hours: parseFloat(document.getElementById('hours').value),
+        attendance: parseFloat(document.getElementById('attendance').value),
+        previous_marks: parseFloat(document.getElementById('previous_marks').value),
+      };
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          error.textContent = data.detail || 'Something went wrong';
+          error.classList.add('show');
+          return;
+        }
+
+        predictedMarks.textContent = data.predicted_marks;
+        result.classList.add('show');
+      } catch (err) {
+        error.textContent = 'Network error. Make sure the server is running.';
+        error.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btnText.style.display = 'inline';
+        spinner.classList.remove('show');
+      }
+    });
+  </script>
+</body>
+</html>
