@@ -12,6 +12,14 @@
 </script>
 
 <div class="page">
+  <nav>
+    <a href="/" class="nav-logo">AI Student Predictor</a>
+    <div class="nav-links">
+      <a href="/">Predict</a>
+      <a href="/signup" class="active">Sign Up</a>
+    </div>
+  </nav>
+
   <div class="card">
     <div class="avatar">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -99,6 +107,31 @@
 </div>
 
 <style>
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 420px;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+  .nav-logo {
+    font-weight: 700;
+    font-size: 15px;
+    background: linear-gradient(135deg, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 16px; }
+  .nav-links a {
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.15s;
+  }
+  .nav-links a:hover, .nav-links a.active { color: #a78bfa; }
   .page {
     min-height: 100vh;
     display: flex;

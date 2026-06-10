@@ -43,10 +43,17 @@
   }
 </script>
 
+<nav>
+  <a href="/" class="nav-logo">AI Student Predictor</a>
+  <div class="nav-links">
+    <a href="/">Predict</a>
+    <a href="/signup">Sign Up</a>
+  </div>
+</nav>
+
 <div class="card">
-  <h1>AI Student Predictor</h1>
-  <p class="subtitle">Predict final exam marks based on study habits</p>
-  <p class="deployment-badge">v1.0.0 · Cloudflare Workers + SvelteKit</p>
+  <h1>Predict Your Performance</h1>
+  <p class="subtitle">Enter your study habits below to predict final exam marks</p>
 
   <form onsubmit={handleSubmit}>
     <div class="form-group">
@@ -93,6 +100,31 @@
 </div>
 
 <style>
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 500px;
+    width: 100%;
+    margin-bottom: 24px;
+  }
+  .nav-logo {
+    font-weight: 700;
+    font-size: 15px;
+    background: var(--gradient-text);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 16px; }
+  .nav-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.15s;
+  }
+  .nav-links a:hover { color: var(--accent-start); }
   .card {
     background: var(--bg-card);
     border: 1px solid var(--border);

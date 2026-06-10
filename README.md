@@ -16,6 +16,13 @@ Frontend (SvelteKit)  ──►  Workers API (ONNX)  ──►  Python training 
 - **Training** — Python (scikit-learn) trains LinearRegression, exports to ONNX format
 - **CI/CD** — GitHub Actions trains model on push, deploys backend + frontend
 
+## Live URLs
+
+| Service | URL |
+|---------|-----|
+| Frontend | [https://ai-student-predictor.pages.dev](https://ai-student-predictor.pages.dev) |
+| API | [https://ai-student-predictor.salmaaaan-kabir.workers.dev](https://ai-student-predictor.salmaaaan-kabir.workers.dev) |
+
 ## Run Locally
 
 ### Prerequisites
