@@ -1,5 +1,8 @@
 <script lang="ts">
   import { predict, ApiError, type PredictRequest } from '$lib/api';
+  import PredictionChart from '$lib/components/PredictionChart.svelte';
+  import PredictionHistory from '$lib/components/PredictionHistory.svelte';
+  import { addEntry } from '$lib/stores/history';
 
   let hours = 5;
   let attendance = 75;
@@ -22,6 +25,12 @@
       };
       const res = await predict(data);
       result = res.predicted_marks;
+      addEntry({
+        hours: data.hours,
+        attendance: data.attendance,
+        previous_marks: data.previous_marks,
+        predicted_marks: res.predicted_marks,
+      });
     } catch (err) {
       if (err instanceof ApiError) {
         error = err.message;
@@ -78,6 +87,9 @@
   {#if error}
     <div class="error">{error}</div>
   {/if}
+
+  <PredictionChart {hours} {attendance} previousMarks={previousMarks} />
+  <PredictionHistory />
 </div>
 
 <style>
