@@ -1,16 +1,30 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 from skl2onnx import convert_sklearn
 from skl2onnx.common.data_types import FloatTensorType
 import os
 import sys
+import json
 
 
 REQUIRED_COLUMNS = {'hours', 'attendance', 'previous_marks', 'final_marks'}
 TARGET_OPSET = 18
+TEST_SIZE = 0.2
+
+
+def evaluate_model(name, model, X_train, X_test, y_train, y_test):
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    r2 = r2_score(y_test, y_pred)
+    mae = mean_absolute_error(y_test, y_pred)
+    cv_scores = cross_val_score(model, X_train, y_train, cv=5, scoring='r2')
+    print(f"\n{name}:")
+    print(f"  R²: {r2:.4f}  |  MAE: {mae:.3f}  |  CV R²: {cv_scores.mean():.4f} (+/- {cv_scores.std():.4f})")
+    return model, r2, mae
 
 
 def main():
@@ -30,29 +44,51 @@ def main():
         sys.exit(1)
 
     if data.isnull().any().any():
-        print("Error: dataset contains null values", file=sys.stderr)
+        print(f"Error: dataset contains null values", file=sys.stderr)
         sys.exit(1)
+
+    print(f"Dataset: {len(data)} rows, {len(data.columns)} columns")
+    print(f"Features: {', '.join(data.columns)}")
 
     X = data[['hours', 'attendance', 'previous_marks']].values.astype(np.float32)
     y = data['final_marks'].values.astype(np.float32)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, random_state=42)
 
-    model = LinearRegression()
-    model.fit(X_train, y_train)
+    models = {
+        'LinearRegression': LinearRegression(),
+        'RandomForest': RandomForestRegressor(n_estimators=100, max_depth=10, random_state=42),
+        'GradientBoosting': GradientBoostingRegressor(
+            n_estimators=100, max_depth=5, learning_rate=0.1, random_state=42
+        ),
+    }
 
-    y_pred = model.predict(X_test)
-    r2 = r2_score(y_test, y_pred)
-    mae = mean_absolute_error(y_test, y_pred)
+    results = []
+    best_r2 = -float('inf')
+    best_name = None
+    best_model = None
 
-    print(f"Train/Test R\u00b2 Score: {r2:.3f}")
-    print(f"Train/Test MAE: {mae:.3f}")
+    for name, model in models.items():
+        fitted, r2, mae = evaluate_model(name, model, X_train, X_test, y_train, y_test)
+        results.append((name, r2, mae))
+        if r2 > best_r2:
+            best_r2 = r2
+            best_name = name
+            best_model = fitted
 
-    final_model = LinearRegression()
+    print(f"\n{'='*50}")
+    print(f"Best model: {best_name} (R²: {best_r2:.4f})")
+
+    final_model = models[best_name]
     final_model.fit(X, y)
 
-    print(f"Coefficients: {list(final_model.coef_)}")
-    print(f"Intercept: {final_model.intercept_}")
+    if best_name == 'LinearRegression':
+        print(f"Coefficients: {list(final_model.coef_)}")
+        print(f"Intercept: {final_model.intercept_}")
+    else:
+        importances = final_model.feature_importances_
+        for name, imp in zip(['hours', 'attendance', 'previous_marks'], importances):
+            print(f"  {name}: {imp:.4f}")
 
     feature_names = ['hours', 'attendance', 'previous_marks']
     initial_type = [('float_input', FloatTensorType([None, len(feature_names)]))]
@@ -62,7 +98,7 @@ def main():
     with open(onnx_path, "wb") as f:
         f.write(onnx_model.SerializeToString())
 
-    print(f"Model exported to {onnx_path}")
+    print(f"\nModel exported to {onnx_path}")
     print("Model training and export complete!")
 
 
