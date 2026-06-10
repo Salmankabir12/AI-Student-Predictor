@@ -37,6 +37,7 @@
 <div class="card">
   <h1>AI Student Predictor</h1>
   <p class="subtitle">Predict final exam marks based on study habits</p>
+  <p class="deployment-badge">v1.0.0 · Cloudflare Workers + SvelteKit</p>
 
   <form onsubmit={handleSubmit}>
     <div class="form-group">
@@ -162,6 +163,12 @@
     background-clip: text;
   }
   .result-note { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
+  .deployment-badge {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    letter-spacing: 0.5px;
+  }
   .error {
     margin-top: 16px;
     padding: 12px;
