@@ -61,4 +61,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           workingDirectory: frontend
-          command: pages deploy dist/
+          command: pages deploy .svelte-kit/cloudflare/ --project-name=ai-student-predictor --branch=main
