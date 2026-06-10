@@ -1,24 +1,65 @@
 # AI Student Predictor
 
-A machine learning web application that predicts a student's final exam marks based on their study hours, attendance, and previous exam performance.
+Predicts a student's final exam marks from study hours, attendance, and previous marks.
 
-Built with FastAPI + scikit-learn + vanilla JS.
+**Stack:** SvelteKit (frontend) + Cloudflare Workers (inference API) + Python/sklearn (training)
 
-## How it works
+## Architecture
 
-The backend trains a Linear Regression model on student performance data. Given three inputs — **hours studied per week**, **attendance percentage**, and **previous exam marks** — it predicts the likely final marks.
-
-## Run locally
-
-```bash
-cd backend
-python3 -m venv venv && source venv/bin/activate
-pip install -r ../requirements.txt
-python3 model.py          # (re)train the model
-python3 -m uvicorn main:app --reload
+```
+Frontend (SvelteKit)  ──►  Workers API (ONNX)  ──►  Python training pipeline
+    :5173                    :8787                      model/train.py
 ```
 
-Open http://127.0.0.1:8000/app
+- **Frontend** — SvelteKit + Vite, deployed on Cloudflare Pages
+- **Inference API** — Cloudflare Workers, ONNX Runtime (WASM) for edge prediction
+- **Training** — Python (scikit-learn) trains LinearRegression, exports to ONNX format
+- **CI/CD** — GitHub Actions trains model on push, deploys backend + frontend
+
+## Run Locally
+
+### Prerequisites
+
+- Node.js 20+
+- Python 3.11+
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) (`npm i -g wrangler`)
+
+### 1. Train the model
+
+```bash
+cd model
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python train.py
+```
+
+Copies `model.onnx` to `worker/static/model.onnx`.
+
+### 2. Start the Workers API
+
+```bash
+cd worker
+npm install
+npx wrangler dev
+```
+
+API runs at `http://127.0.0.1:8787`.
+
+### 3. Start the frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend runs at `http://127.0.0.1:5173`.
+
+### Docker (alternative)
+
+```bash
+docker compose up
+```
 
 ## API
 
@@ -29,10 +70,25 @@ POST /predict
   "attendance": 85,
   "previous_marks": 75
 }
+
 → { "predicted_marks": 79.59 }
 ```
 
-## Tech stack
+## Deployment
 
-- **Backend** — FastAPI, scikit-learn, pandas
-- **Frontend** — HTML, CSS, JS (no framework)
+Push to `main` → GitHub Actions:
+1. Trains model (`model/train.py`)
+2. Deploys Workers API (`wrangler deploy`)
+3. Deploys frontend to Cloudflare Pages
+
+Requires `CLOUDFLARE_API_TOKEN` secret in GitHub repo.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | SvelteKit 5, Vite, TypeScript |
+| API | Cloudflare Workers, ONNX Runtime |
+| Model | scikit-learn (LinearRegression) |
+| Export | ONNX (skl2onnx) |
+| CI/CD | GitHub Actions, Wrangler |

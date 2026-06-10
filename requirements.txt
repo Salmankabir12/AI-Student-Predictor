@@ -1,6 +1,2 @@
-fastapi
-uvicorn
-scikit-learn
-pandas
-numpy
-pydantic
+# Training dependencies (for model/train.py)
+-r model/requirements.txt

@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  worker:
+    image: node:20
+    ports:
+      - "8787:8787"
+    working_dir: /app/worker
+    volumes:
+      - .:/app
+      - /app/worker/node_modules
+    command: npx wrangler dev --host 0.0.0.0 --port 8787
+
+  frontend:
+    image: node:20
+    ports:
+      - "5173:5173"
+    working_dir: /app/frontend
+    volumes:
+      - .:/app
+      - /app/frontend/node_modules
+    command: npx vite dev --host 0.0.0.0
+    depends_on:
+      - worker
