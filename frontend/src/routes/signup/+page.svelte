@@ -135,6 +135,7 @@
   .page {
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     background: linear-gradient(135deg, #0f0a1e 0%, #1a0f2e 50%, #0f0a1e 100%);
